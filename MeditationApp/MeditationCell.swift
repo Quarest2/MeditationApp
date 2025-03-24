@@ -64,10 +64,10 @@ class MeditationCell: UITableViewCell {
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
 
-            meditationImageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 16),
-            meditationImageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
-            meditationImageView.widthAnchor.constraint(equalToConstant: 80),
-            meditationImageView.heightAnchor.constraint(equalToConstant: 80),
+            meditationImageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 12),
+            meditationImageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
+            meditationImageView.widthAnchor.constraint(equalToConstant: 60),
+            meditationImageView.heightAnchor.constraint(equalToConstant: 60),
 
             titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 16),
             titleLabel.leadingAnchor.constraint(equalTo: meditationImageView.trailingAnchor, constant: 16),

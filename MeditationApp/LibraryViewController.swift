@@ -19,17 +19,67 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
     }
 
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor.background
+        
+        let backgroundImageView = UIImageView(image: UIImage(named: "library_colour"))
+        backgroundImageView.contentMode = .scaleAspectFill
+        backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(backgroundImageView)
+        
+        // Настроим констрейнты для фона
+        NSLayoutConstraint.activate([
+            backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+        
         title = "Медитации"
+        
+        // Приветствие и вопрос
+        let welcomeLabel = UILabel()
+        welcomeLabel.text = "Welcome, Username!"
+        welcomeLabel.font = .systemFont(ofSize: 30, weight: .bold)
+        welcomeLabel.textColor = .white
+        welcomeLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(welcomeLabel)
+
+        let feelingLabel = UILabel()
+        feelingLabel.text = "How are you feeling today?"
+        feelingLabel.font = .systemFont(ofSize: 20, weight: .regular)
+        feelingLabel.textColor = .white
+        feelingLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(feelingLabel)
+
+        // Позиционируем элементы на экране с помощью Auto Layout
+        NSLayoutConstraint.activate([
+            // Для welcomeLabel
+            welcomeLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 100),
+            welcomeLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            welcomeLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            // Для feelingLabel
+            feelingLabel.topAnchor.constraint(equalTo: welcomeLabel.bottomAnchor, constant: 10),
+            feelingLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            feelingLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+        ])
 
         // Настройка таблицы
-        tableView.frame = view.bounds
+        tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
         tableView.register(MeditationCell.self, forCellReuseIdentifier: "cell")
         view.addSubview(tableView)
+
+        // Констрейнты для таблицы (чтобы она начиналась ниже приветственного текста)
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: feelingLabel.bottomAnchor, constant: 20), // Сместим таблицу ниже
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
 
         // Кнопка добавления медитации
         let addButton = UIBarButtonItem(
@@ -50,8 +100,11 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
 
     private func loadMeditations() {
         meditations = [
-            Meditation(title: "Утренняя медитация", duration: "10 мин", image: "morning.jpg"),
-            Meditation(title: "Вечерняя медитация", duration: "15 мин", image: "evening.jpg")
+            Meditation(title: "Breathe", duration: "20 мин", image: "breathe"),
+            Meditation(title: "Wake up", duration: "10 мин", image: "wake_up"),
+            Meditation(title: "Relax", duration: "15 мин", image: "relax"),
+            Meditation(title: "Anxiety", duration: "30 мин", image: "anxiety"),
+            Meditation(title: "Gratitude", duration: "30 мин", image: "gratitude"),
         ]
         tableView.reloadData()
     }
