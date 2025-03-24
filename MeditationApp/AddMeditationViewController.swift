@@ -58,10 +58,10 @@ class AddMeditationViewController: UIViewController {
               let image = imageTextField.text else { return }
 
         // Создаем новую медитацию
-        let newMeditation = Meditation(title: title, duration: duration, image: image)
+        // let newMeditation = Meditation(title: title, duration: duration, image: image)
 
         // Вызываем метод делегата
-        delegate?.didAddMeditation(newMeditation)
+        //delegate?.didAddMeditation(newMeditation)
 
         // Возвращаемся на предыдущий экран
         navigationController?.popViewController(animated: true)

@@ -9,5 +9,5 @@ struct Meditation {
     let title: String
     let duration: String
     let image: String
-    // let audioURL: String
+    let audioURL: String?
 }

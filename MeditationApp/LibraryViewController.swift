@@ -6,11 +6,16 @@
 //
 
 import UIKit
+import AVFoundation
 
 class LibraryViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, AddMeditationDelegate {
 
     var meditations: [Meditation] = []
     let tableView = UITableView()
+    var currentMeditation: Meditation?
+    var miniPlayerView: UIView!
+    var miniPlayButton: UIButton!
+    var audioPlayer: AVAudioPlayer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -75,7 +80,7 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
 
         // Констрейнты для таблицы (чтобы она начиналась ниже приветственного текста)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: feelingLabel.bottomAnchor, constant: 20), // Сместим таблицу ниже
+            tableView.topAnchor.constraint(equalTo: feelingLabel.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -89,6 +94,29 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
         )
         addButton.tintColor = .systemBlue // Цвет иконки
         navigationItem.rightBarButtonItem = addButton // Размещаем в правом верхнем углу
+        
+        // Мини плеер внизу экрана
+        miniPlayerView = UIView()
+        miniPlayerView.backgroundColor = .systemGray5
+        miniPlayerView.frame = CGRect(x: 0, y: view.frame.height - 60, width: view.frame.width, height: 60)
+        miniPlayerView.layer.cornerRadius = 8
+        view.addSubview(miniPlayerView)
+
+        miniPlayButton = UIButton()
+        miniPlayButton.setTitle("Play", for: .normal)
+        miniPlayButton.setTitleColor(.black, for: .normal)
+        miniPlayButton.frame = CGRect(x: 16, y: 10, width: 40, height: 40)
+        miniPlayButton.addTarget(self, action: #selector(miniPlayButtonTapped), for: .touchUpInside)
+        miniPlayerView.addSubview(miniPlayButton)
+    }
+    
+    @objc private func miniPlayButtonTapped() {
+        guard let currentMeditation = currentMeditation else { return }
+
+        // Открываем полный экран плеера
+        let playerVC = PlayerViewController()
+        playerVC.meditation = currentMeditation
+        navigationController?.pushViewController(playerVC, animated: true)
     }
 
     @objc private func addMeditationButtonTapped() {
@@ -100,11 +128,11 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
 
     private func loadMeditations() {
         meditations = [
-            Meditation(title: "Breathe", duration: "20 мин", image: "breathe"),
-            Meditation(title: "Wake up", duration: "10 мин", image: "wake_up"),
-            Meditation(title: "Relax", duration: "15 мин", image: "relax"),
-            Meditation(title: "Anxiety", duration: "30 мин", image: "anxiety"),
-            Meditation(title: "Gratitude", duration: "30 мин", image: "gratitude"),
+            Meditation(title: "Breathe", duration: "4:28 мин", image: "breathe", audioURL: "breathe_music"),
+            Meditation(title: "Wake up", duration: "1:30 мин", image: "wake_up", audioURL: "https://music.apple.com/us/album/rain-and-music/1642284026?i=1642284027"),
+            Meditation(title: "Relax", duration: "1:30 мин", image: "relax", audioURL: "https://music.apple.com/us/album/the-sound-of-harmony/1291357067?i=1291357631"),
+            Meditation(title: "Anxiety", duration: "1:30 мин", image: "anxiety", audioURL: "https://music.apple.com/us/album/flowing-energy/1642284026?i=1642284036"),
+            Meditation(title: "Gratitude", duration: "1:30 мин", image: "gratitude", audioURL: "https://music.apple.com/us/album/indescribable-emotions-nature/1642284026?i=1642284037"),
         ]
         tableView.reloadData()
     }
@@ -122,17 +150,22 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
 
     // MARK: - UITableViewDelegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
+        let meditation = meditations[indexPath.row]
+        currentMeditation = meditation
 
-        // Анимация нажатия на ячейку
-        if let cell = tableView.cellForRow(at: indexPath) as? MeditationCell {
-            cell.animateTap()
+        
+        if let audioURL = meditation.audioURL, let url = Bundle.main.url(forResource: audioURL, withExtension: "mp3") {
+            // Загружаем и воспроизводим аудио с помощью AVAudioPlayer
+            do {
+                audioPlayer = try AVAudioPlayer(contentsOf: url)
+                audioPlayer?.play() // Запуск воспроизведения
+                miniPlayButton.setTitle("Pause", for: .normal) // Кнопка будет показывать "Pause"
+            } catch {
+                print("Ошибка воспроизведения: \(error)")
+            }
+        } else {
+            print("Неверный URL для аудио.")
         }
-
-        // Переход на экран проигрывателя
-        let playerVC = PlayerViewController()
-        playerVC.meditation = meditations[indexPath.row]
-        navigationController?.pushViewController(playerVC, animated: true)
     }
 
     // MARK: - AddMeditationDelegate
