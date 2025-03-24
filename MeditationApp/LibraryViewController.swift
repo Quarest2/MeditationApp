@@ -21,6 +21,12 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
         super.viewDidLoad()
         setupUI()
         loadMeditations()
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Ошибка настройки аудиосессии: \(error)")
+        }
     }
 
     private func setupUI() {
@@ -34,7 +40,7 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
         // Настроим констрейнты для фона
         NSLayoutConstraint.activate([
             backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
-            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 800),
             backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
@@ -43,7 +49,7 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
         
         // Приветствие и вопрос
         let welcomeLabel = UILabel()
-        welcomeLabel.text = "Welcome, Username!"
+        welcomeLabel.text = "Welcome, " + (UserDefaults.standard.string(forKey: "nickname") ?? "Username") + "!"
         welcomeLabel.font = .systemFont(ofSize: 30, weight: .bold)
         welcomeLabel.textColor = .white
         welcomeLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -158,7 +164,9 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
             // Загружаем и воспроизводим аудио с помощью AVAudioPlayer
             do {
                 audioPlayer = try AVAudioPlayer(contentsOf: url)
-                audioPlayer?.play() // Запуск воспроизведения
+                audioPlayer?.prepareToPlay() // Буферизация аудио
+                audioPlayer?.play()
+                // Запуск воспроизведения
                 miniPlayButton.setTitle("Pause", for: .normal) // Кнопка будет показывать "Pause"
             } catch {
                 print("Ошибка воспроизведения: \(error)")
