@@ -16,6 +16,11 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
     var miniPlayerView: UIView!
     var miniPlayButton: UIButton!
     var audioPlayer: AVAudioPlayer?
+    var isPlaying: Bool = false        // флаг, идёт ли воспроизведение
+    var audioStartTime: Date? = nil    // время начала воспроизведения
+    var timer: Timer?                  // таймер для обновления времени
+    var timeLabel: UILabel!            // лейбл для отображения времени
+    var titleLabel: UILabel!           // лейбл для отображения названия медитации
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -75,6 +80,48 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
             feelingLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
 
+        // Настройка мини-плеера
+        miniPlayerView = UIView()
+        miniPlayerView.backgroundColor = UIColor.systemGray5.withAlphaComponent(0.8) // Полупрозрачный фон
+        miniPlayerView.translatesAutoresizingMaskIntoConstraints = false // Включаем Auto Layout
+        view.addSubview(miniPlayerView)
+
+        NSLayoutConstraint.activate([
+            miniPlayerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            miniPlayerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            miniPlayerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor), // Safe area
+            miniPlayerView.heightAnchor.constraint(equalToConstant: 60)
+        ])
+
+        miniPlayButton = UIButton()
+        miniPlayButton.setTitle("Play", for: .normal)
+        miniPlayButton.setTitleColor(.black, for: .normal)
+        miniPlayButton.frame = CGRect(x: 16, y: 10, width: 40, height: 40)
+        miniPlayButton.addTarget(self, action: #selector(miniPlayButtonTapped), for: .touchUpInside)
+        miniPlayerView.addSubview(miniPlayButton)
+        
+        // Добавляем лейблы для времени и названия
+        titleLabel = UILabel()
+        titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        titleLabel.textColor = .black
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        miniPlayerView.addSubview(titleLabel)
+        
+        timeLabel = UILabel()
+        timeLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        timeLabel.textColor = .black
+        timeLabel.translatesAutoresizingMaskIntoConstraints = false
+        miniPlayerView.addSubview(timeLabel)
+        
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: miniPlayButton.trailingAnchor, constant: 16),
+            titleLabel.centerYAnchor.constraint(equalTo: miniPlayerView.centerYAnchor),
+            
+            timeLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 8),
+            timeLabel.centerYAnchor.constraint(equalTo: miniPlayerView.centerYAnchor)
+        ])
+
+        
         // Настройка таблицы
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
@@ -84,45 +131,45 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
         tableView.register(MeditationCell.self, forCellReuseIdentifier: "cell")
         view.addSubview(tableView)
 
-        // Констрейнты для таблицы (чтобы она начиналась ниже приветственного текста)
+        // Констрейнты для таблицы (чтобы она не перекрывала мини-плеер)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: feelingLabel.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: miniPlayerView.topAnchor) // Таблица заканчивается выше мини-плеера
         ])
-
-        // Кнопка добавления медитации
-        let addButton = UIBarButtonItem(
-            barButtonSystemItem: .add, // Иконка "+"
-            target: self,
-            action: #selector(addMeditationButtonTapped)
-        )
-        addButton.tintColor = .systemBlue // Цвет иконки
-        navigationItem.rightBarButtonItem = addButton // Размещаем в правом верхнем углу
-        
-        // Мини плеер внизу экрана
-        miniPlayerView = UIView()
-        miniPlayerView.backgroundColor = .systemGray5
-        miniPlayerView.frame = CGRect(x: 0, y: view.frame.height - 60, width: view.frame.width, height: 60)
-        miniPlayerView.layer.cornerRadius = 8
-        view.addSubview(miniPlayerView)
-
-        miniPlayButton = UIButton()
-        miniPlayButton.setTitle("Play", for: .normal)
-        miniPlayButton.setTitleColor(.black, for: .normal)
-        miniPlayButton.frame = CGRect(x: 16, y: 10, width: 40, height: 40)
-        miniPlayButton.addTarget(self, action: #selector(miniPlayButtonTapped), for: .touchUpInside)
-        miniPlayerView.addSubview(miniPlayButton)
     }
     
     @objc private func miniPlayButtonTapped() {
-        guard let currentMeditation = currentMeditation else { return }
-
-        // Открываем полный экран плеера
-        let playerVC = PlayerViewController()
-        playerVC.meditation = currentMeditation
-        navigationController?.pushViewController(playerVC, animated: true)
+        // Логика нажатия на мини плеер
+        if isPlaying {
+            audioPlayer?.pause()
+            miniPlayButton.setTitle("Play", for: .normal)
+            isPlaying = false
+            timer?.invalidate() // Останавливаем таймер
+        } else {
+            audioPlayer?.play()
+            miniPlayButton.setTitle("Pause", for: .normal)
+            isPlaying = true
+            
+            // Запускаем таймер для обновления времени
+            startTimer()
+        }
+    }
+    
+    private func startTimer() {
+        // Обновляем время каждую секунду
+        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTime), userInfo: nil, repeats: true)
+    }
+    
+    @objc private func updateTime() {
+        guard let player = audioPlayer else { return }
+        
+        let elapsedTime = Int(player.currentTime)
+        let minutes = elapsedTime / 60
+        let seconds = elapsedTime % 60
+        
+        timeLabel.text = String(format: "%02d:%02d", minutes, seconds)
     }
 
     @objc private func addMeditationButtonTapped() {
@@ -135,10 +182,10 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
     private func loadMeditations() {
         meditations = [
             Meditation(title: "Breathe", duration: "4:28 мин", image: "breathe", audioURL: "breathe_music"),
-            Meditation(title: "Wake up", duration: "1:30 мин", image: "wake_up", audioURL: "https://music.apple.com/us/album/rain-and-music/1642284026?i=1642284027"),
-            Meditation(title: "Relax", duration: "1:30 мин", image: "relax", audioURL: "https://music.apple.com/us/album/the-sound-of-harmony/1291357067?i=1291357631"),
-            Meditation(title: "Anxiety", duration: "1:30 мин", image: "anxiety", audioURL: "https://music.apple.com/us/album/flowing-energy/1642284026?i=1642284036"),
-            Meditation(title: "Gratitude", duration: "1:30 мин", image: "gratitude", audioURL: "https://music.apple.com/us/album/indescribable-emotions-nature/1642284026?i=1642284037"),
+            Meditation(title: "Wake up", duration: "4:47 мин", image: "wake_up", audioURL: "wake_up"),
+            Meditation(title: "Relax", duration: "10:04 мин", image: "relax", audioURL: "relax_music"),
+            Meditation(title: "Anxiety", duration: "5:33 мин", image: "anxiety", audioURL: "anxiety_music"),
+            Meditation(title: "Gratitude", duration: "6:52 мин", image: "gratitude", audioURL: "gratitude_music"),
         ]
         tableView.reloadData()
     }
@@ -157,24 +204,66 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
     // MARK: - UITableViewDelegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let meditation = meditations[indexPath.row]
-        currentMeditation = meditation
-
         
-        if let audioURL = meditation.audioURL, let url = Bundle.main.url(forResource: audioURL, withExtension: "mp3") {
-            // Загружаем и воспроизводим аудио с помощью AVAudioPlayer
-            do {
-                audioPlayer = try AVAudioPlayer(contentsOf: url)
-                audioPlayer?.prepareToPlay() // Буферизация аудио
-                audioPlayer?.play()
-                // Запуск воспроизведения
-                miniPlayButton.setTitle("Pause", for: .normal) // Кнопка будет показывать "Pause"
-            } catch {
-                print("Ошибка воспроизведения: \(error)")
-            }
+        // Если аудио уже проигрывается - ставим на паузу
+        if isPlaying {
+            audioPlayer?.pause()
+
+            // Считаем, сколько секунд прошло
+            let elapsedSeconds = Int(Date().timeIntervalSince(audioStartTime ?? Date()))
+
+            // Читаем текущее значение из UserDefaults
+            let oldValue = UserDefaults.standard.integer(forKey: "totalMeditationSeconds")
+
+            // Сохраняем новое значение
+            UserDefaults.standard.set(oldValue + elapsedSeconds, forKey: "totalMeditationSeconds")
+
+            // Меняем кнопку на Play (в миниплеере)
+            miniPlayButton.setTitle("Play", for: .normal)
+
+            // Меняем флаг
+            isPlaying = false
+
+            // Останавливаем таймер
+            timer?.invalidate()
+
         } else {
-            print("Неверный URL для аудио.")
+            // Ищем локальный файл
+            if let audioURL = meditation.audioURL,
+               let url = Bundle.main.url(forResource: audioURL, withExtension: "mp3") {
+                do {
+                    audioPlayer = try AVAudioPlayer(contentsOf: url)
+                    audioPlayer?.prepareToPlay()
+                    audioPlayer?.play()
+
+                    // Запоминаем время старта
+                    audioStartTime = Date()
+
+                    // Меняем кнопку на Pause (в миниплеере)
+                    miniPlayButton.setTitle("Pause", for: .normal)
+
+                    // Устанавливаем текущую медитацию и флаг
+                    currentMeditation = meditation
+                    isPlaying = true
+                    
+                    // Показываем мини плеер
+                    miniPlayerView.isHidden = false
+                    
+                    // Обновляем название медитации
+                    titleLabel.text = meditation.title
+                    
+                    // Запускаем таймер для обновления времени
+                    startTimer()
+
+                } catch {
+                    print("Ошибка воспроизведения: \(error)")
+                }
+            } else {
+                print("Неверный URL для аудио.")
+            }
         }
     }
+
 
     // MARK: - AddMeditationDelegate
     func didAddMeditation(_ meditation: Meditation) {
