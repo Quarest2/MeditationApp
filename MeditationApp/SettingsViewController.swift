@@ -43,6 +43,7 @@ class SettingsViewController: UIViewController, UIImagePickerControllerDelegate,
         setupUI()
         loadSavedData()
         setupGestures()
+        setupAddMeditationButton()
     }
     
     // MARK: - Setup UI
@@ -122,5 +123,35 @@ class SettingsViewController: UIViewController, UIImagePickerControllerDelegate,
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true)
+    }
+    
+    private func setupAddMeditationButton() {
+            let addButton = UIButton(type: .system)
+            addButton.setTitle("Добавить медитацию", for: .normal)
+            addButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+            addButton.setTitleColor(.systemBlue, for: .normal)
+            addButton.backgroundColor = .secondarySystemBackground
+            addButton.layer.cornerRadius = 10
+            addButton.addTarget(self, action: #selector(addMeditationTapped), for: .touchUpInside)
+            
+            view.addSubview(addButton)
+            addButton.translatesAutoresizingMaskIntoConstraints = false
+            
+            // Размещаем кнопку внизу экрана (можно изменить расположение по необходимости)
+            NSLayoutConstraint.activate([
+                addButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                addButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+                addButton.heightAnchor.constraint(equalToConstant: 50)
+            ])
+        }
+        
+    @objc private func addMeditationTapped() {
+        let addMeditationVC = AddMeditationViewController()
+        
+        let navController = UINavigationController(rootViewController: addMeditationVC)
+        navController.modalPresentationStyle = .fullScreen
+        self.present(navController, animated: true)
+      
     }
 }

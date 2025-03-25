@@ -94,7 +94,7 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
         ])
 
         miniPlayButton = UIButton()
-        miniPlayButton.setTitle("Play", for: .normal)
+        miniPlayButton.setImage(UIImage(named: "play"), for: .normal)
         miniPlayButton.setTitleColor(.black, for: .normal)
         miniPlayButton.frame = CGRect(x: 16, y: 10, width: 40, height: 40)
         miniPlayButton.addTarget(self, action: #selector(miniPlayButtonTapped), for: .touchUpInside)
@@ -144,13 +144,28 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
         // Логика нажатия на мини плеер
         if isPlaying {
             audioPlayer?.pause()
-            miniPlayButton.setTitle("Play", for: .normal)
+            miniPlayButton.setImage(UIImage(named: "play"), for: UIControl.State.normal)
             isPlaying = false
+            
+            let elapsedSeconds = Int(Date().timeIntervalSince(audioStartTime ?? Date()))
+            if (elapsedSeconds >= 60){
+                UserDefaults.standard.set(UserDefaults.standard.integer(forKey: "meditationSessionsCount") + 1, forKey: "meditationSessionsCount")
+            }
+
+            // Читаем текущее значение из UserDefaults
+            let oldValue = UserDefaults.standard.integer(forKey: "totalMeditationSeconds")
+
+            // Сохраняем новое значение
+            UserDefaults.standard.set(oldValue + elapsedSeconds, forKey: "totalMeditationSeconds")
+            
             timer?.invalidate() // Останавливаем таймер
         } else {
             audioPlayer?.play()
-            miniPlayButton.setTitle("Pause", for: .normal)
+            miniPlayButton.setImage(UIImage(named: "pause"), for: UIControl.State.normal)
             isPlaying = true
+            
+            // Запоминаем время старта
+            audioStartTime = Date()
             
             // Запускаем таймер для обновления времени
             startTimer()
@@ -170,13 +185,6 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
         let seconds = elapsedTime % 60
         
         timeLabel.text = String(format: "%02d:%02d", minutes, seconds)
-    }
-
-    @objc private func addMeditationButtonTapped() {
-        // Переход на экран добавления медитации
-        let addMeditationVC = AddMeditationViewController()
-        addMeditationVC.delegate = self // Устанавливаем делегат
-        navigationController?.pushViewController(addMeditationVC, animated: true)
     }
 
     private func loadMeditations() {
@@ -211,6 +219,9 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
 
             // Считаем, сколько секунд прошло
             let elapsedSeconds = Int(Date().timeIntervalSince(audioStartTime ?? Date()))
+            if (elapsedSeconds >= 60){
+                UserDefaults.standard.set(UserDefaults.standard.integer(forKey: "meditationSessionsCount") + 1, forKey: "meditationSessionsCount")
+            }
 
             // Читаем текущее значение из UserDefaults
             let oldValue = UserDefaults.standard.integer(forKey: "totalMeditationSeconds")
@@ -240,7 +251,7 @@ class LibraryViewController: UIViewController, UITableViewDataSource, UITableVie
                     audioStartTime = Date()
 
                     // Меняем кнопку на Pause (в миниплеере)
-                    miniPlayButton.setTitle("Pause", for: .normal)
+                    miniPlayButton.setImage(UIImage(named: "pause"), for: .normal)
 
                     // Устанавливаем текущую медитацию и флаг
                     currentMeditation = meditation

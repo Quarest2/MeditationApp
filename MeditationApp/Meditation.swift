@@ -11,3 +11,5 @@ struct Meditation {
     let image: String
     let audioURL: String?
 }
+
+
