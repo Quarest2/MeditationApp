@@ -21,6 +21,7 @@ class AddMeditationViewController: UIViewController {
     private let imageButton = UIButton()
     private let audioButton = UIButton()
     private let saveButton = UIButton()
+    private let backButton = UIButton()
     
     private var selectedImage: UIImage?
     private var audioURL: URL?
@@ -29,39 +30,8 @@ class AddMeditationViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupBackButton()
         setupUI()
         setupGestures()
-    }
-            
-    private func setupBackButton() {
-        let backButton = UIBarButtonItem(
-            title: "Назад",
-            style: .plain,
-            target: self,
-            action: #selector(backTapped)
-        )
-        navigationItem.leftBarButtonItem = backButton
-    }
-    
-    @objc private func backTapped() {
-        if nameTextField.text?.isEmpty == false || selectedImage != nil || audioURL != nil {
-            // Есть несохраненные данные
-            let alert = UIAlertController(
-                title: "Выйти без сохранения?",
-                message: "Все изменения будут потеряны",
-                preferredStyle: .alert
-            )
-            
-            alert.addAction(UIAlertAction(title: "Остаться", style: .cancel))
-            alert.addAction(UIAlertAction(title: "Выйти", style: .destructive) { _ in
-                self.navigationController?.popViewController(animated: true)
-            })
-            
-            present(alert, animated: true)
-        } else {
-            navigationController?.popViewController(animated: true)
-        }
     }
     
     // MARK: - Setup
@@ -91,7 +61,7 @@ class AddMeditationViewController: UIViewController {
         
         // Title Label
         titleLabel.text = "Добавить медитацию"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        titleLabel.font = UIFont.systemFont(ofSize: Constants.addFontOffSize, weight: .bold)
         contentView.addSubview(titleLabel)
         
         // Name TextField
@@ -102,32 +72,39 @@ class AddMeditationViewController: UIViewController {
         
         // Duration Picker
         durationPicker.datePickerMode = .countDownTimer
-        durationPicker.minuteInterval = 1
-        durationPicker.countDownDuration = 300 // 5 минут по умолчанию
+        durationPicker.minuteInterval = Constants.minute
+        durationPicker.countDownDuration = Constants.fiveMinutes // 5 минут по умолчанию
         contentView.addSubview(durationPicker)
         
         // Image Button
         imageButton.setTitle("Выбрать изображение", for: .normal)
         imageButton.setTitleColor(.systemBlue, for: .normal)
-        imageButton.layer.borderWidth = 1
+        imageButton.layer.borderWidth = Constants.buttonBorderWidth
         imageButton.layer.borderColor = UIColor.systemBlue.cgColor
-        imageButton.layer.cornerRadius = 8
+        imageButton.layer.cornerRadius = Constants.imageButtonCornerRadius
         contentView.addSubview(imageButton)
         
         // Audio Button
         audioButton.setTitle("Выбрать аудиофайл", for: .normal)
         audioButton.setTitleColor(.systemBlue, for: .normal)
-        audioButton.layer.borderWidth = 1
+        audioButton.layer.borderWidth = Constants.buttonBorderWidth
         audioButton.layer.borderColor = UIColor.systemBlue.cgColor
-        audioButton.layer.cornerRadius = 8
+        audioButton.layer.cornerRadius = Constants.audioButtonCornerRadius
         contentView.addSubview(audioButton)
         
         // Save Button
         saveButton.setTitle("Сохранить", for: .normal)
         saveButton.backgroundColor = .systemBlue
         saveButton.setTitleColor(.white, for: .normal)
-        saveButton.layer.cornerRadius = 8
+        saveButton.layer.cornerRadius = Constants.saveButtonCornerRadius
         contentView.addSubview(saveButton)
+        
+        // Back Button
+        saveButton.setTitle("Назад", for: .normal)
+        saveButton.backgroundColor = .systemRed
+        saveButton.setTitleColor(.white, for: .normal)
+        saveButton.layer.cornerRadius = Constants.saveButtonCornerRadius
+        contentView.addSubview(backButton)
         
         // Layout
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -136,34 +113,41 @@ class AddMeditationViewController: UIViewController {
         imageButton.translatesAutoresizingMaskIntoConstraints = false
         audioButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.translatesAutoresizingMaskIntoConstraints = false
+        backButton.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Constants.titleConstraint),
             titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
-            nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
-            nameTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            nameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            nameTextField.heightAnchor.constraint(equalToConstant: 40),
+            nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: Constants.nameTextTopConstraing),
+            nameTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.nameTextLeadingConstraint),
+            nameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: Constants.nameTextTrailingConstraint),
+            nameTextField.heightAnchor.constraint(equalToConstant: Constants.nameTextHeightConstraint),
             
-            durationPicker.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 20),
+            durationPicker.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: Constants.durationTopConstraint),
             durationPicker.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
-            imageButton.topAnchor.constraint(equalTo: durationPicker.bottomAnchor, constant: 30),
-            imageButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            imageButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            imageButton.heightAnchor.constraint(equalToConstant: 50),
+            imageButton.topAnchor.constraint(equalTo: durationPicker.bottomAnchor, constant: Constants.imageTopConstraint),
+            imageButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.imageLeadingConstraint),
+            imageButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: Constants.imageTrailingConstraint),
+            imageButton.heightAnchor.constraint(equalToConstant: Constants.imageHeightConstraint),
             
-            audioButton.topAnchor.constraint(equalTo: imageButton.bottomAnchor, constant: 20),
-            audioButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            audioButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            audioButton.heightAnchor.constraint(equalToConstant: 50),
+            audioButton.topAnchor.constraint(equalTo: imageButton.bottomAnchor, constant: Constants.audioTopConstraint),
+            audioButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.audioLeadingConstraint),
+            audioButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: Constants.audioTrailingConstraint),
+            audioButton.heightAnchor.constraint(equalToConstant: Constants.audioHeightConstraint),
             
-            saveButton.topAnchor.constraint(equalTo: audioButton.bottomAnchor, constant: 40),
-            saveButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            saveButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            saveButton.heightAnchor.constraint(equalToConstant: 50),
-            saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
+            saveButton.topAnchor.constraint(equalTo: audioButton.bottomAnchor, constant: Constants.saveTopConstraint),
+            saveButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.saveLeadingConstraint),
+            saveButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: Constants.saveTrailingConstraint),
+            saveButton.heightAnchor.constraint(equalToConstant: Constants.saveHeightConstraint),
+            saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: Constants.saveBottomConstraint),
+            
+            backButton.topAnchor.constraint(equalTo: audioButton.bottomAnchor, constant: Constants.backTopConstraint),
+            backButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.backLeadingConstraint),
+            backButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: Constants.backTrailingConstraint),
+            backButton.heightAnchor.constraint(equalToConstant: Constants.backHeightConstraint),
+            backButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: Constants.backBottomConstraint)
         ])
     }
     
@@ -171,6 +155,35 @@ class AddMeditationViewController: UIViewController {
         imageButton.addTarget(self, action: #selector(selectImage), for: .touchUpInside)
         audioButton.addTarget(self, action: #selector(selectAudio), for: .touchUpInside)
         saveButton.addTarget(self, action: #selector(saveMeditation), for: .touchUpInside)
+        backButton.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
+    }
+    
+    @objc private func backTapped() {
+        
+        if nameTextField.text?.isEmpty == false || selectedImage != nil || audioURL != nil {
+            // Есть несохраненные данные
+            let alert = UIAlertController(
+                title: "Выйти без сохранения?",
+                message: "Все изменения будут потеряны",
+                preferredStyle: .alert
+            )
+        
+            alert.addAction(UIAlertAction(title: "Остаться", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Выйти", style: .destructive) { _ in
+                let libraryVC = LibraryViewController()
+                let navigationController = UINavigationController(rootViewController: libraryVC)
+                navigationController.modalPresentationStyle = .fullScreen
+                self.present(navigationController, animated: true)
+            })
+        
+            present(alert, animated: true)
+        } else {
+            let libraryVC = LibraryViewController()
+            let navigationController = UINavigationController(rootViewController: libraryVC)
+            navigationController.modalPresentationStyle = .fullScreen
+            self.present(navigationController, animated: true)
+        }
+      
     }
     
     // MARK: - Actions
