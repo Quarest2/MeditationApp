@@ -1,4 +1,3 @@
-//
 //  StatisticsViewController.swift
 //  MeditationApp
 //
@@ -36,11 +35,13 @@ class StatisticsViewController: UIViewController {
         setupViews()
         setupConstraints()
         updateUI()
+        updateStreak()  // Обновляем стрик на старте
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateUI()
+        updateStreak()  // Обновляем стрик при возвращении на экран
     }
     
     // MARK: - Setup
@@ -203,5 +204,23 @@ class StatisticsViewController: UIViewController {
         animation.toValue = progress
         animation.duration = 1.5
         shapeLayer.add(animation, forKey: "progressAnimation")
+    }
+    
+    // MARK: - Streak Update
+    private func updateStreak() {
+        let lastDate = UserDefaults.standard.object(forKey: "lastMeditationDate") as? Date ?? Date()
+        
+        // Проверяем, если медитация была вчера
+        if Calendar.current.isDateInYesterday(lastDate) {
+            // Увеличиваем стрик (если была медитация вчера)
+            let streak = UserDefaults.standard.integer(forKey: "meditationStreakDays") + 1
+            UserDefaults.standard.set(streak, forKey: "meditationStreakDays")
+        } else {
+            // Если новая медитация - обнуляем стрик
+            UserDefaults.standard.set(1, forKey: "meditationStreakDays")
+        }
+        
+        // Сохраняем дату последней медитации
+        UserDefaults.standard.set(Date(), forKey: "lastMeditationDate")
     }
 }
